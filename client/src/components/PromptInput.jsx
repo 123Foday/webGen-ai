@@ -66,7 +66,7 @@ const PromptInput = ({ onSubmit, loading = false, placeholder = "Describe websit
       placeholder={placeholder} 
       disabled={loading} 
       rows={large ? 5 : 1} 
-      className={`flex-1 bg-transparent border-none outline-neutral-50 resize-none text-zinc-900 placeholder:text-zinc-400 ${large ? "text-base" : "text-sm"}`} />
+      className={`flex-1 min-h-[1.4rem] bg-transparent border-none outline-none resize-none text-zinc-900 caret-zinc-900 placeholder:text-zinc-400 focus:outline-none ${large ? "text-base" : "text-sm"}`} />
 
       <button 
         onClick={()=> handleSubmit()}
