@@ -54,7 +54,7 @@ export async function chat(req, res) {
         }));
 
         console.log(
-            `[AI] Revising project ${project._id}: "${prompt.slice(0,80)}..." ` + 
+            `[AI] Revising project ${project._id} ` +
                 `(${manifest.length} files, manifest ~${JSON.stringify(manifest).length} chars)`,
         );
 
