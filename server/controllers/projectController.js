@@ -19,6 +19,7 @@ export async function createProject(req, res) {
 
     if (!req.user) {
         res.status(401).json({ error: "Unauthorized" });
+        return;
     }
 
     // Create project in DB immediately with "pending" status
@@ -49,7 +50,7 @@ export async function createProject(req, res) {
         name: project.name,
         description: project.description,
         files: {},
-        messages: project.messaeges,
+        messages: project.messages,
         version: project.version,
         status: project.status,
         filesPlanned: project.filesPlanned,
@@ -96,7 +97,7 @@ async function runBackgroundGeneration(projectId, prompt) {
                 if(project) {
                     project.files = project.files || {};
                     project.files[path] = { content: code, hash: hashContent(code) };
-                    project.filesGenerated = [...Project(project.filesGenerate || []), path];
+                    project.filesGenerated = [...(project.filesGenerated || []), path];
                     project.messages.push({
                         role: "assistant",
                         content: `Created file "${path}"`,
@@ -182,7 +183,7 @@ export async function getProject(req, res) {
         name: project.name,
         description: project.description,
         files: filesObj,
-        messages: project.messaeges,
+        messages: project.messages,
         version: project.version,
         status: project.status,
         filesPlanned: project.filesPlanned,
@@ -202,7 +203,7 @@ export async function deleteProject(req, res) {
         return;
     }
 
-    const result = await Project.findOneAndDelete({ _id: req.params.id, owner: req.userId });
+    const result = await Project.findOneAndDelete({ _id: req.params.id, owner: req.user.userId });
     if(!result) {
         res.status(401).json({ error: "Project not found" });
         return;
@@ -244,9 +245,7 @@ export async function updateProjectFiles(req, res) {
 
     const filesObj = {};
     for (const [path, entry] of Object.entries(project.files)) {
-        if(typeof content === "string") {
-            filesObj[path] = entry.content;
-        }
+        filesObj[path] = entry.content;
     }
 
     res.json({
@@ -254,7 +253,7 @@ export async function updateProjectFiles(req, res) {
         name: project.name,
         description: project.description,
         files: filesObj,
-        messages: project.messaeges,
+        messages: project.messages,
         version: project.version,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,

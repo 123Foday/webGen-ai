@@ -14,7 +14,7 @@ export function applyOperations(currentFiles, operations) {
         try {
             switch (op.op) {
                 case "create": {
-                    if (!op.content) {
+                    if(op.content == null) {
                         errors.push(`create ${op.path}: missing content`);
                         break;
                     }

@@ -54,7 +54,7 @@ export async function chat(req, res) {
         }));
 
         console.log(
-            `[AI] Revising project ${project._id}: "${project.slice(0,80)}..." ` + 
+            `[AI] Revising project ${project._id}: "${prompt.slice(0,80)}..." ` + 
                 `(${manifest.length} files, manifest ~${JSON.stringify(manifest).length} chars)`,
         );
 
@@ -75,7 +75,7 @@ export async function chat(req, res) {
         project.markModified("files");
         project.version += 1;
         project.status = "completed";
-        project.message.push({
+        project.messages.push({
             role: "assistant",
             content: result.description + (errors.length > 0 ? `\n\n Some operations failed: ${errors.join(", ")}` : ""),
         })
