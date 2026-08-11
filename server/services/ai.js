@@ -3,6 +3,7 @@ import { generateObject } from 'ai';
 import pMap from "p-map";
 import { FileCodeSchema, FilePlanSchema, RevisionResultSchema } from './aiSchemas.js';
 import { buildFileCodeSystem, FILE_PLAN_SYSTEM, REVISE_SYSTEM } from './prompts.js';
+import { validateAndFixCode, validateRevisionContent } from './codeValidator.js';
 import { el } from 'zod/v4/locales';
 import { normalizeContent } from './contentNormalizer.js';
 import { raw } from 'express';
@@ -85,7 +86,7 @@ export async function generateProject(prompt, callbacks) {
     }
 
     if(callbacks?.onPlan) {
-        await calllbacks.onPlan(plan)
+        await callbacks.onPlan(plan)
     }
     
     console.log(`[AI] Phase 2: Generating ${plan.files.length} files in parallel (concurrency=${MAX_CONCURRENCY}): ${plan.files.map((f)=> f.path).join(", ")}`);
@@ -112,7 +113,7 @@ export async function generateProject(prompt, callbacks) {
                         await callbacks.onFileStart(file.path)
                     }
 
-                    const singleResult = await generateSingleFile(file, planlfiles, prompt, files)
+                    const singleResult = await generateSingleFile(file, plan.files, prompt, files)
 
                     if(callbacks?.onFileComplete) {
                         await callbacks.onFileComplete(file.path, singleResult.code);
@@ -142,13 +143,14 @@ export async function generateProject(prompt, callbacks) {
         const failedPaths = pendingFiles.map((f)=> f.path).join(", ");
         console.error(`[AI] Failed to generate ${pendingFiles.length} files after all retry rounds: ${failedPaths}`);
 
-        if(pendingFiles.some((f)=> f.path === "/App.js")) {
-            const ext = file.path.split(".").pop()?.toLowerCase();
+        for (const file of pendingFiles) {
+            const normalizedPath = file.path.startsWith("/") ? file.path : `/${file.path}`;
+            const ext = normalizedPath.split('.').pop()?.toLowerCase();
 
             if(ext === "css") {
-                files[file.path] = `/* ${file.description} - Generation failed, please retry */\n`
+                files[normalizedPath] = `/* ${file.description} - Generation failed, please retry */\n`
             } else {
-                files[file.path] = "import React from 'react';\n\n" + 
+                files[normalizedPath] = "import React from 'react';\n\n" + 
                 `// ⚠️ This file could not be generated. Please retry.\n` + 
                 `// Purpose: ${file.description}\n\n` + 
                 "export default function Placehoder() {\n" +      
