@@ -146,11 +146,12 @@ export async function generateProject(prompt, callbacks) {
         for (const file of pendingFiles) {
             const normalizedPath = file.path.startsWith("/") ? file.path : `/${file.path}`;
             const ext = normalizedPath.split('.').pop()?.toLowerCase();
+            let fallbackContent;
 
             if(ext === "css") {
-                files[normalizedPath] = `/* ${file.description} - Generation failed, please retry */\n`
+                fallbackContent = `/* ${file.description} - Generation failed, please retry */\n`
             } else {
-                files[normalizedPath] = "import React from 'react';\n\n" + 
+                fallbackContent = "import React from 'react';\n\n" + 
                 `// ⚠️ This file could not be generated. Please retry.\n` + 
                 `// Purpose: ${file.description}\n\n` + 
                 "export default function Placehoder() {\n" +      
@@ -160,6 +161,12 @@ export async function generateProject(prompt, callbacks) {
                    "    </div>\n" +
                    "  );\n" +
                    "}\n";
+            }
+
+            files[normalizedPath] = fallbackContent;
+
+            if(callbacks?.onFileComplete) {
+                await callbacks.onFileComplete(normalizedPath, fallbackContent);
             }
         }
     }
